@@ -35,6 +35,11 @@ var (
 	errNoLastInsertID  = errors.New("no LastInsertId available after the empty statement")
 )
 
+const (
+	// readTimeout is same as our backend's ConnMaxLifeTime.
+	readTimeout = 10 * time.Minute
+)
+
 // Driver is the Postgres database driver.
 type Driver struct{}
 
@@ -955,6 +960,7 @@ func (cn *conn) recvMessage(r *readBuf) (byte, error) {
 		return t, nil
 	}
 
+	cn.c.SetReadDeadline(time.Now().Add(readTimeout))
 	x := cn.scratch[:5]
 	_, err := io.ReadFull(cn.buf, x)
 	if err != nil {
